@@ -1,0 +1,17 @@
+{% load static %}
+<html>
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+    {% block custom_styles %}{% endblock %}
+    <link type="text/css" rel="stylesheet" href="{% static 'portal/css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
+    <script src="{% static 'portal/js/base.js' %}"></script>
+  </head>
+  <body class="portal_div">
+    <div>
+      <a href="/finance" class="button">Finance</a>
+      <a href="/finance/companies/" class="button">Companies</a>
+      <a href="{% url 'welcome_app:welcome-page' %}" class="button">App</a>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+*.agdai
+MAlonzo/**
+*.pyc
+.venv\
+.venv/
+.venv
+venv
+# *.gz
+# *.sqlite3

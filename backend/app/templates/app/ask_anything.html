@@ -1,0 +1,225 @@
+{% extends "app/index.html" %}
+
+{% block title %} PanelPrime: Ask Anything {% endblock %}
+
+{% block custom_styles %}
+<style>
+  .container{
+    padding-top: 10px;
+    display: inline-grid;
+  }
+  .comment_section{
+    /* border: 2px solid white; */
+    border-radius: 3px;
+    padding: 8px;
+  }
+  .answare_class{
+    padding: 10px 10px 0px 0px;
+    border-radius: 20px 20px 0px 20px; 
+    width: 100%;
+    margin: 5px 0px;
+    display: inline-flex;
+    justify-content: space-between;
+  }
+  .question_class{
+    border: 1px solid #4e4e4e ;
+    background: black;
+    width: 100%;
+    float: left;
+    padding: 10px 0px 0px 10px;
+    border-radius: 2px;
+    margin: 5px 0px;
+  }
+  .question_child{
+
+    justify-content: space-between;
+    display: flex;
+  }
+  .date_class{
+    font-size: xx-small;
+    color: gray;
+  }
+  .question_class p:first-child,  .answare_class p:first-child{
+    margin-bottom: 0px !important;
+  }
+  .textarea_class{
+    background: transparent;
+    height: 80px;
+    width: 99%;
+    border-radius: 2px;
+    color:white;
+    padding:5px;
+  }
+  .textarea_question_class{
+    background: black;
+    height: 100px;
+    width: 99%;
+    color:white;
+    border: 2px dotted;
+    border-radius: 10px;
+    padding:5px;
+
+  }
+  .question_text_div{
+    position: sticky;
+    bottom: 0;
+    height: 170px;
+    background-image: linear-gradient(to bottom right, rgb(0, 0, 41), rgb(1, 110, 255));
+    padding: 18px 0px 0px 10px;
+    border-radius: 10px;
+  }
+  .modal-content {
+    background-color: #000 !important;
+    border: 1px solid white !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container" >
+  <div class="comment_section" id="comment_section">
+    {% for question in question_answer %}
+      <div class="question_class" id="question_{{question.id}}">
+        <div class="question_child">
+          <div>
+            <p>{{question.question}}</p><p class="date_class">{{question.action_by_name}} | {{question.created_on}}</p>
+          </div>
+        </div>
+        <div>
+          <form method="post">
+            {% csrf_token %}
+            <textarea class="textarea_class" placeholder="Give your answer here" name="answer_textarea" required></textarea>
+            <input type="hidden" name="question_id" value="{{question.id}}">
+            <button class="btn btn-primary" type="submit">Submit</button>
+            <button class="btn btn-primary" type="reset">Clear</button>
+            {% if request.user.is_authenticated and request.user.id == question.action_by %}
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-model_title="Edit Question" data-bs-question="{{question.question}}" data-bs-question_id="{{question.id}}"><i class="fa fa-edit"></i></button>
+              <button type="button" class="btn btn-primary" onClick="DeleteQuestion('{{question.id}}')"> <i class="fa fa-trash"></i></button>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+      {% for answare in question.answers %}
+        <div class="answare_class" id="text_{{answare.id}}">
+          <div>
+            <p>{{answare.answer}}</p>
+            <p class="date_class">{{answare.action_by_name}} | {{answare.created_on}}</p>
+          </div>
+          {% if request.user.is_authenticated and request.user.id == answare.action_by %}
+            <div>
+              <button type="button" class="btn btn-primary" onClick="DeleteAnswer('{{answare.id}}')"> <i class="fa fa-trash"></i></button>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal"  data-bs-model_title="Edit Answer" data-bs-answer="{{answare.answer}}" data-bs-answer_id="{{answare.id}}"><i class="fa fa-edit"></i></button>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+   </div>
+  <div class="question_text_div" >
+    <form method="post">
+      {% csrf_token %}
+      <textarea class="textarea_question_class" placeholder="Ask question about our services and other" name="question_textarea" required></textarea>
+      <button type="submit" style="background: transparent;">Submit</button>
+      <button type="reset" style="background: transparent;">Clear</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          {% csrf_token %}
+          <div class="mb-3">
+            <textarea class="form-control" id="qustion_answer_text" required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary save" onclick="UpdateQuestionAnswer(this.id, this.is_answer)" >Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  function DeleteAnswer(answer_id){
+    $.ajax({
+      url:`/delete_update_answer/${answer_id}/`,
+      type:"DELETE",
+      dataType:"json",
+      headers: {'X-CSRFToken': csrftoken},
+      success:function(data){
+        if(data.status ==1 ){
+          $(`#text_${answer_id}`).remove()
+        }
+      }
+    })
+  }
+  function DeleteQuestion(question_id){
+    $.ajax({
+      url:`/ask_anything/${question_id}/`,
+      type:"DELETE",
+      dataType:"json",
+      headers: {'X-CSRFToken': csrftoken},
+      success:function(data){
+        base.reloadData('#comment_section')
+      }
+    })
+  }
+  function UpdateQuestionAnswer(id, is_answer){
+    if(is_answer){
+      $.ajax({
+        url:`/delete_update_answer/${id}/`,
+        type:"PUT",
+        dataType:"json",
+        headers: {'X-CSRFToken': csrftoken},
+        data:{ 'answer':$("#qustion_answer_text").val()},
+        success:function(data){
+          $("#exampleModal").modal("hide")
+          base.reloadData('#comment_section')
+        }
+      })
+    }else{
+      $.ajax({
+        url:`/ask_anything/${id}/`,
+        type:"PATCH",
+        headers: {'X-CSRFToken': csrftoken},
+        data:{ 'question':$("#qustion_answer_text").val()},
+        success:function(data){
+          $("#exampleModal").modal("hide")
+          base.reloadData('#comment_section')
+        },
+      })
+    }
+  }
+  var exampleModal = document.getElementById('exampleModal')
+  exampleModal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget
+    var model_title = button.getAttribute('data-bs-model_title')
+    var recipient = button.getAttribute('data-bs-answer')
+    is_answer = true
+    if(recipient){
+      var recipient_id = button.getAttribute('data-bs-answer_id')
+    }else{
+      is_answer = false
+      var recipient = button.getAttribute('data-bs-question')
+      var recipient_id = button.getAttribute('data-bs-question_id')
+    }
+    $("#exampleModalLabel").html(model_title)
+    var modalBodyInput = exampleModal.querySelector('.modal-body textarea')
+    modalBodyInput.value = recipient
+    var modalFooterSave = exampleModal.querySelector('.modal-footer .save')
+    modalFooterSave.id = recipient_id
+    modalFooterSave.is_answer = is_answer
+  })
+</script>
+{% endblock %}
+
