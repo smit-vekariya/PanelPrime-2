@@ -31,9 +31,7 @@ urlpatterns = [
     path('account/',include("account.urls", namespace="account")),
     path('manager/',include("manager.urls", namespace="manager")),
     path('qr_admin/',include("qradmin.urls", namespace="qr_admin")),
-    path('portal/', include("portal.urls", namespace="portal")),
     path('qr_app/',include("qrapp.urls", namespace="qr_app")),
     path('post_office/',include("postoffice.urls", namespace="post_office")),
-    path('finance/',include(("finance.urls", "finance"), namespace="finance")), # this is seprete app from bondclick, you can add this app in any project
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

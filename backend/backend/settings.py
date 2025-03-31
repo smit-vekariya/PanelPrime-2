@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'account',
-    'finance', # this is seprete app from bondclick, you can add this app in any project
     'app',
     'manager',
     'qradmin',
@@ -71,7 +70,6 @@ INSTALLED_APPS = [
     'postoffice',
     'django_celery_results',
     'django_celery_beat',
-    'portal'
 ]
 
 MIDDLEWARE = [
@@ -178,7 +176,7 @@ CELERY_BROKER_URL = "redis://127.0.0.1:6379"
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'   
+CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_RESULT_EXTENDED = True

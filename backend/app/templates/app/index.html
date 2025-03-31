@@ -8,19 +8,30 @@
 
     {% block custom_styles %}{% endblock %}
     <style>
-        button{
-          color: white;
-          border: 2px solid white;
-          border-radius: 4px !important;
-          margin: 5px 1px !important;
-          background-image: linear-gradient(to bottom right, rgb(0, 0, 41), rgb(1, 110, 255));
-          padding: 2px 15px;
-        }
+      button {
+        color: white;
+        border: 2px solid white;
+        border-radius: 4px !important;
+        margin: 5px 1px !important;
+        background-image: linear-gradient(
+          to bottom right,
+          rgb(0, 0, 41),
+          rgb(1, 110, 255)
+        );
+        padding: 2px 15px;
+      }
     </style>
-    
-    <link type="text/css" rel="stylesheet" href="{% static 'app/css/index.css' %}">
-    <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="{% static 'app/css/index.css' %}"
+    />
+    <link rel="stylesheet" href="{% static 'app/css/bootstrap.min.css' %}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
     <script src="{% static 'app/js/bootstrap.bundle.min.js' %}?"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'app/js/base.js' %}"></script>
@@ -28,19 +39,16 @@
   <body>
     <div class="index_header">
       <ul>
-            <li><a href="{% url 'app:welcome-page' %}">Home</a></li>
-            <li><a href="{% url 'app:contact-us-page' %}">Contact us</a></li>
-            <li><a href="{% url 'app:about-us-page' %}">About us</a></li>
-            <li><a href="{% url 'app:ask-anything-page' %}">Ask Anything</a></li>
-            <li><a href="{% url 'app:task-scheduler-page' %}">Task Scheduler</a></li>
-            <li><a href="{% url 'account:app-logout' %}">Logout</a></li>
-            <li><a href="{% url 'app:portfolio-index' %}">Portfolio</a></li>
-          </ul>
+        <li><a href="{% url 'app:welcome-page' %}">Home</a></li>
+        <li><a href="{% url 'app:contact-us-page' %}">Contact us</a></li>
+        <li><a href="{% url 'app:about-us-page' %}">About us</a></li>
+        <li><a href="{% url 'app:ask-anything-page' %}">Ask Anything</a></li>
+        <li>
+          <a href="{% url 'app:task-scheduler-page' %}">Task Scheduler</a>
+        </li>
+        <li><a href="{% url 'account:app-logout' %}">Logout</a></li>
+      </ul>
     </div>
-    <div class="index_body">
-        {% block content %}
-        {% endblock %}
-    </div>
+    <div class="index_body">{% block content %} {% endblock %}</div>
   </body>
 </html>
-

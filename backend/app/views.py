@@ -46,13 +46,13 @@ class Welcome(APIView):
 
 
 class AskAnything(LoginRequiredMixin, viewsets.ModelViewSet):
-    # we use LoginRequiredMixin because we need django default authentication not  
+    # we use LoginRequiredMixin because we need django default authentication not
     login_url = '/account/app_login/'
     queryset = CommentQuestions.objects.all()
     serializer_class = CommentQuestionsSerializers
     renderer_classes = [TemplateHTMLRenderer]
     template_name = "app/ask_anything.html"
-    
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.serializer_class(queryset, many=True)
@@ -90,7 +90,7 @@ class AboutUs(APIView):
     template_name = "app/about_us.html"
 
     def get(self, request, *args, **kwargs):
-        return Response(status=200, template_name=self.template_name)   
+        return Response(status=200, template_name=self.template_name)
 
 
 class ContactUs(APIView):
@@ -101,7 +101,7 @@ class ContactUs(APIView):
     template_name = "app/contact_us.html"
 
     def get(self, request, *args, **kwargs):
-        return Response(status=200, template_name=self.template_name) 
+        return Response(status=200, template_name=self.template_name)
 
     def post(self, request, *args, **kwargs):
         try:
@@ -113,7 +113,7 @@ class ContactUs(APIView):
                 return redirect(reverse('app:message-page') + '?messages=Something went wrong! Try later.')
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
-            
+
 
 class TaskSchedulerView(LoginRequiredMixin, viewsets.ModelViewSet):
     login_url = '/account/app_login/'
@@ -134,7 +134,7 @@ class TaskSchedulerView(LoginRequiredMixin, viewsets.ModelViewSet):
         else:
             periodic_form = PeriodicTaskForm()
             form_title= "Create Periodic Task"
-        return Response(status=200, template_name=self.template_name, data={"task_scheduler_list":serializers.data, "periodic_form":periodic_form, "form_title":form_title, "periodic_id":periodic_id})        
+        return Response(status=200, template_name=self.template_name, data={"task_scheduler_list":serializers.data, "periodic_form":periodic_form, "form_title":form_title, "periodic_id":periodic_id})
 
     def task_operation(self, request, *args, **kargs):
         try:
@@ -164,13 +164,13 @@ class TaskSchedulerView(LoginRequiredMixin, viewsets.ModelViewSet):
             return redirect(reverse('app:task-scheduler-page'))
         else:
             serializers = self.get_serializer(queryset, many=True)
-            return Response(status=200, template_name=self.template_name, data={"task_scheduler_list":serializers.data, "periodic_form":periodic_form}) 
-            
+            return Response(status=200, template_name=self.template_name, data={"task_scheduler_list":serializers.data, "periodic_form":periodic_form})
+
     def task_result(self,request, *args, **kwargs):
         periodic_name = self.request.query_params.get('periodic_name')
         results = TaskResult.objects.filter(periodic_task_name=periodic_name)
         if results:
             serializer = TaskResultSerializer(results, many=True)
             return Response(status=200, template_name="app/task_results_m.html", data={"results":serializer.data})
-        return HttpResponse("Periodic task result not found.")   
+        return HttpResponse("Periodic task result not found.")
 
