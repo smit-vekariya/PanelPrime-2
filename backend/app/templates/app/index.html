@@ -38,12 +38,13 @@
   </head>
   <body>
     <div class="index_header">
+      {% comment %}
       <ul>
         <li><a href="{% url 'app:welcome-page' %}">Home</a></li>
         <li><a href="{% url 'app:contact-us-page' %}">Contact us</a></li>
         <li><a href="{% url 'app:about-us-page' %}">About us</a></li>
-        <li><a href="{% url 'account:app-logout' %}">Logout</a></li>
       </ul>
+      {% endcomment %}
     </div>
     <div class="index_body">{% block content %} {% endblock %}</div>
   </body>

@@ -10,7 +10,7 @@ body{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-  
+
 .btn-shine{
   position: absolute;
   top: 45%;
@@ -29,7 +29,7 @@ body{
   font-size: 30px;
   text-decoration: none;
   white-space: nowrap;
-    
+
 }
 @keyframes shine{
   0%{
@@ -53,9 +53,9 @@ body{
   white-space:nowrap;
 }
 
-.escap:first-of-type {    /* For increasing performance 
-                       ID/Class should've been used. 
-                       For a small demo 
+.escap:first-of-type {    /* For increasing performance
+                       ID/Class should've been used.
+                       For a small demo
                        it's okaish for now */
   animation: showup 7s infinite;
 }
@@ -116,16 +116,14 @@ p {
 {% block content %}
 
 <div class="main">
-  <a href="{% url 'account:app-login' %}" class="btn-shine login_btn"  style="top:400px;left: 880px;">Login Now</a>
-  <a href="{% url 'account:app-registration' %}" class="btn-shine login_btn"  style="top:400px;left: 1036px;">Register Now</a>
   <div class="btn-shine" style="top:300px;font-size: 15px;">
-    <h1>WELCOME TO PANEL PRIME</h1>  
+    <h1>WELCOME TO PANELPRIME</h1>
   </div>
-  <div class="btn-shine" style="top:350px;font-size: 15px;"> 
+  <div class="btn-shine" style="top:350px;font-size: 15px;">
     <span>Integrating Innovation: Seamless ERPs, Powerful APIs, and Beyond</span>
   </div>
 </div>
-  
+
 
 {% endblock %}
 
