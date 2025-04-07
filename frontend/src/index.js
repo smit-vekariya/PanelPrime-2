@@ -8,12 +8,8 @@ import "./components/CustomHtml.css";
 import './components/component.css';
 import CompanyDashBoard from './components/js/CompanyDashBoard';
 import Permissions from './components/js/Permissions';
-import QrBatch from './components/js/QrBatch';
-import QrCode from './components/js/QrCode';
 import SystemParameter from './components/js/SystemParameter';
 import TaskScheduler from './components/js/TaskScheduler';
-import UserWallet from './components/js/UserWallet';
-import UsersWalletReport from './components/js/UsersWalletReport';
 import Dashboard from './components/js/dashboard';
 import Login from './components/js/login';
 import Profile from './components/js/profile';
@@ -49,10 +45,6 @@ root.render(
                     {/* main menu page */}
                     <Route path="company_dashboard"    element={<AuthRoute component={<CompanyDashBoard/>}  code="company_dashboard" />} />
                     <Route path="user"                 element={<AuthRoute component={<User/>}              code="user" />} />
-                    <Route path="user/user_wallet/:user_id"  element={<AuthRoute component={<UserWallet/>}  code="user"/> } />
-                    <Route path="qr_batch"             element={<AuthRoute component={<QrBatch/>}           code="qr_batch" />} />
-                    <Route path="qr_code"              element={<AuthRoute component={<QrCode/>}            code="qr_code" />} />
-                    <Route path="users_wallet_report/" element={<AuthRoute component={<UsersWalletReport/>} code="users_wallet_report" />} />
                     <Route path="permissions/"         element={<AuthRoute component={<Permissions/>}       code="permissions" />} />
                     <Route path="system_parameter/"    element={<AuthRoute component={<SystemParameter/>}   code="system_parameter" />} />
                     <Route path="task_scheduler/"      element={<AuthRoute component={<TaskScheduler/>}   code="task_scheduler" />} />

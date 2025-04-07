@@ -23,10 +23,10 @@ class MobileNumberBackend(BaseBackend):
 
 
 class AdminLoginBackend(BaseBackend):
-    def authenticate(request, mobile=None, password=None):
+    def authenticate(request, email=None, password=None):
         User = get_user_model()
         try:
-            user = User.objects.get(mobile=mobile)
+            user = User.objects.get(email=email)
             if not user.check_password(password):
                 return None
         except User.DoesNotExist:

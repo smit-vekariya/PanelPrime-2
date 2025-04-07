@@ -18,7 +18,7 @@ export default function AuthProvider(){
             headers:{
                 'Content-Type':"application/json"
             },
-            body:JSON.stringify({"mobile":values.mobile,"password":values.password})
+            body:JSON.stringify({"email":values.email,"password":values.password})
         })
         let data = await response.json()
         if (data.status === 1){

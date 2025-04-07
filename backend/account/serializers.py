@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import BondUser ,City
+from account.models import BondUser
 
 
 # class UserSerializers(serializers.ModelSerializer):
@@ -26,9 +26,7 @@ class BondUserSerializers(serializers.ModelSerializer):
 
 
 class BondUserListSerializers(serializers.ModelSerializer):
-    city__name = serializers.CharField(source='city.name', read_only=True)
-    state__name = serializers.CharField(source='state.name' ,read_only=True)
-    distributor__name = serializers.CharField(source='distributor.name' ,read_only=True)
+    group__name = serializers.CharField(source='group.name', read_only=True)
     class Meta:
         model = BondUser
-        fields = ["id","full_name", "mobile", "address", "pin_code", "city__name", "state__name", "distributor__name"]
+        fields = ["id", "email", "mobile", "first_name", "last_name", "last_login", "is_active", "group__name", "address", "pin_code"]

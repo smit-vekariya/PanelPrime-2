@@ -68,7 +68,7 @@ class AllPermissions(models.Model):
 
     class Meta:
         unique_together = ('page_name', 'act_code')
-      
+
     def __str__(self):
         return f"{self.page_name.name} - {self.act_name}"
 
@@ -95,7 +95,7 @@ class GroupPermission(models.Model):
         if self.pk is not None:
             #  You can not create group permission from here and update only 'has perm' field. if you want to update, delete that permission from all permission and create again."
             super().save(update_fields=['has_perm'])
-            
+
     #for stop delete (code in admin.py)
     #You can not delete group permission from here. if you want to delete group permission you have to delete permission from all permission model.
 
