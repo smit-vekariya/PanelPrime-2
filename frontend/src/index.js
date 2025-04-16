@@ -14,6 +14,8 @@ import Dashboard from './components/js/dashboard';
 import Login from './components/js/login';
 import Profile from './components/js/profile';
 import Register from './components/js/register';
+import ForgotPassword from './components/js/forgotPassword';
+import ChangePassword from './components/js/changePassword';
 import User from './components/js/user';
 import AuthProvider from './context/AuthContext';
 import './index.css';
@@ -54,6 +56,8 @@ root.render(
               </Route>
             </Route>
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot_password" element={<ForgotPassword />} />
+            <Route path="/change_password/:uid/:token" element={<ChangePassword />} />
           </Route>
           <Route path="/register" element={<Register />} />
         </Route>

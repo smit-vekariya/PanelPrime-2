@@ -155,6 +155,7 @@ STATIC_ROOT = BASE_DIR / 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media/'
 
+FRONT_END_BASE_URL = env("FRONT_END_BASE_URL")
 
 LOGIN_URL='/account/app_login/'
 LOGIN_REDIRECT_URL = '/app/'

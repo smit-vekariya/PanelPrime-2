@@ -1,10 +1,8 @@
-import { Button, Form, Input, Row, Col, Card, Upload, Flex  } from 'antd';
+import { Button, Card, Col, Form, Input, Row } from 'antd';
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import useAxios from "../../utils/useAxios";
 import '../component.css';
-import type { UploadProps } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
 
 
 
@@ -12,8 +10,9 @@ export default function Profile(){
     const api = useRef(useAxios())
     const [profile, setProfile] = useState({})
     const {messageApi} = useContext(AuthContext)
-    const[disabled, setDisabled] = useState(true)
-
+    const [disabled, setDisabled] = useState(true)
+    const [profileImage, setProfileImage] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
 
     const getProfileData = useCallback(async() =>{
         await api.current.get('/account/user_profile/')
@@ -38,7 +37,22 @@ export default function Profile(){
         setProfile({...profile,[e.target.name]:e.target.value})
     }
     const saveProfile = async() =>{
-        await api.current.put(`/account/edit_profile/${profile.id}`,profile)
+        const formData = new FormData();
+        for (const key in profile) {
+            if (key !== 'profile') {
+                formData.append(key, profile[key]);
+
+            }
+        }
+
+        if (profileImage) {
+            formData.append("file", profileImage, "profile.jpg");
+        }
+
+        await api.current.put(`/account/edit_profile/${profile.id}`,formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }})
             .then((res)=>{
                 if(res.data.status ===1){
                     setDisabled(true)
@@ -53,7 +67,17 @@ export default function Profile(){
             })
     }
 
-
+    const profileUpload = (e) =>{
+        const file = e.target.files[0];
+        setProfileImage(file)
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewImage(reader.result)
+            };
+            reader.readAsDataURL(file);
+        }
+    }
      return (
         <>
         <div className='title_tab'>
@@ -61,10 +85,8 @@ export default function Profile(){
         </div>
         <div className='main_tab' style={{display:"flex"}}>
             <div style={{margin:"20px"}}>
-                <Card style={{ width: 240 }} cover={<img alt="example" src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" />}>
-                <Upload>
-                    <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
+                <Card style={{ width: 240 }} className="profile_card" cover={<img alt="profile" src={previewImage || profile.profile_path} />}>
+                    <input type="file" id="profile" disabled={disabled}  accept="image/*" name="profile_name" onChange={profileUpload}/>
                 </Card>
             </div>
             <div>

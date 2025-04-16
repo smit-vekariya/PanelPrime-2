@@ -23,6 +23,17 @@ from django.contrib.auth.hashers import make_password
 from manager.manager import create_from_exception
 from django.shortcuts  import redirect
 from django.contrib.auth import login, authenticate, logout
+from postoffice.views import SendMail
+import textwrap
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import action
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import get_user_model
 
 
 # Create your views here.
@@ -31,15 +42,18 @@ class UserProfile(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         try:
             user_id = request.user.id
-            user_data = BondUserListSerializers(BondUser.objects.filter(id=user_id), many=True).data
-            print("user_data", user_data)
+            user_data = BondUserListSerializers(BondUser.objects.filter(id=user_id), many=True,  context={'request': request}).data
             return HttpsAppResponse.send([user_data], 1, "User Profile data get successfully.")
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
 
     def put(self, request, pk=None):
         try:
-            serializer = BondUserListSerializers(BondUser.objects.get(pk=pk), data=request.data)
+            data = request.data
+            if request.FILES.get('file'):
+                data["profile"] = request.FILES.get('file')
+
+            serializer = BondUserListSerializers(BondUser.objects.get(pk=pk), data=data)
             if serializer.is_valid():
                 serializer.save()
                 return HttpsAppResponse.send([], 1, "User Profile Updated.")
@@ -193,5 +207,64 @@ class RegisterUser(APIView):
             else:
                 error_messages = ", ".join(value[0] for key, value in serializer.errors.items())
                 return HttpsAppResponse.send([], 0, error_messages)
+        except Exception as e:
+            return HttpsAppResponse.exception(str(e))
+
+
+class ForgetPassword(ViewSet):
+    authentication_classes = []
+    permission_classes = []
+
+    def send_mail(self, request, *args, **kwargs):
+        try:
+            email = request.data["email"]
+            try:
+                email_user =  BondUser.objects.get(email=email, is_active=True, is_deleted=False)
+            except ObjectDoesNotExist:
+               return HttpsAppResponse.send([], 0, "This email is not registered or account is not active.")
+
+            uid = urlsafe_base64_encode(force_bytes(email_user.id))
+            token = default_token_generator.make_token(email_user)
+
+            reset_link = f"{settings.FRONT_END_BASE_URL}/change_password/{uid}/{token}"
+
+            subject = "Reset Your Password - PanelPrime"
+            message =  textwrap.dedent(f'''
+                Hi {email_user.first_name} {email_user.last_name},
+
+                We received a request to reset your password for your PanelPrime account.
+                Please click the link below to reset your password:
+
+                { reset_link }
+
+                If you didn’t request this, you can safely ignore this email.
+
+                Thanks,
+                The PanelPrime Team
+            ''')
+
+            is_send, msg = SendMail.send_mail(None, True, email, subject, message)
+            if not is_send:
+                return HttpsAppResponse.send([], 0, msg)
+            return HttpsAppResponse.send([], 1, "Check your email for the password reset link.")
+        except Exception as e:
+            return HttpsAppResponse.exception(str(e))
+
+    def change_password(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            uid = data.get("uid")
+            token = data.get("token")
+            password = data.get("password")
+
+            uid = urlsafe_base64_decode(uid).decode()
+            user = get_user_model().objects.get(pk=uid)
+            
+            if default_token_generator.check_token(user, token):
+                user.set_password(password)
+                user.save()
+                return HttpsAppResponse.send([], 1, "Password has been change successfully.")
+            else:
+                return HttpsAppResponse.send([], 0, "Invalid or expired token")
         except Exception as e:
             return HttpsAppResponse.exception(str(e))

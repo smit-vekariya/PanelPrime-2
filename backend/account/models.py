@@ -5,9 +5,10 @@ from django.dispatch import receiver
 from datetime import timedelta
 
 
+
 def upload_location(instance, filename):
     extension = filename.rsplit('.')[1]
-    return f"profile/{instance.email}.{extension}"
+    return f"profile/{instance.id}.{extension}"
 
 
 class CustomUserManager(BaseUserManager):
@@ -80,7 +81,6 @@ class BondUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-
 
 
 class UserToken(models.Model):
