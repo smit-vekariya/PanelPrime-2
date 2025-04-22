@@ -33,5 +33,6 @@ urlpatterns = [
     path('qr_admin/',include("qradmin.urls", namespace="qr_admin")),
     path('qr_app/',include("qrapp.urls", namespace="qr_app")),
     path('post_office/',include("postoffice.urls", namespace="post_office")),
+    path('ai/',include("ai.urls", namespace="ai")),
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
