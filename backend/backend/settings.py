@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'account',
+    'ai',
     'app',
     'manager',
     'qradmin',
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
     'postoffice',
     'django_celery_results',
     'django_celery_beat',
+   
 ]
 
 MIDDLEWARE = [
