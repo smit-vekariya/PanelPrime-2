@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework',
+    'drf_yasg',
     'corsheaders',
     'crispy_forms',
     'crispy_bootstrap5',
@@ -66,7 +67,6 @@ INSTALLED_APPS = [
     'app',
     'manager',
     'qradmin',
-    'qrapp',
     'qr_code',
     'postoffice',
     'django_celery_results',
@@ -157,6 +157,7 @@ STATIC_ROOT = BASE_DIR / 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media/'
 
+FRONT_END_BASE_URL = env("FRONT_END_BASE_URL")
 
 LOGIN_URL='/account/app_login/'
 LOGIN_REDIRECT_URL = '/app/'
@@ -222,7 +223,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # documentation fo JWT (https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#jwk-url)
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

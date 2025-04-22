@@ -1,4 +1,4 @@
-import { Button, Input, Table } from 'antd';
+import { Button, Input, Table, Tag } from 'antd';
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../../context/AuthContext';
@@ -8,7 +8,6 @@ import useAxios from "../../utils/useAxios";
 export default function User(){
     const api = useRef(useAxios())
     const { Search } = Input;
-    let navigate = useNavigate()
     const [users, setUsers] = useState([])
     const [totalRecord , setTotalRecord] = useState(0)
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -34,28 +33,27 @@ export default function User(){
 
 
     const columns = [
-        {title:"Name",dataIndex:"full_name",sorter: true},
-        {title:"Mobile No.",dataIndex:"mobile",sorter: true},
-        {title:"Address",dataIndex:"address",sorter: true},
-        {title:"Pin Code",dataIndex:"pin_code",sorter: true},
-        {title:"City",dataIndex:"city__name", sorter: true},
-        {title:"State",dataIndex:"state__name",sorter: true},
-        {title:"Distributor",dataIndex:"distributor__name",sorter: true},
+        {title:"First Name",dataIndex:"first_name",sorter: true},
+        {title:"Last name",dataIndex:"last_name",sorter: true},
+        {title:"Email",dataIndex:"email",sorter: true},
+        {title:"Is active",dataIndex:"is_active", sorter: true,
+            render: (is_active) => {
+                const color = is_active ? 'green' : 'volcano';
+                const tag = is_active ? 'Active' : 'Inactive';
+
+                return (
+                <Tag color={color} key={tag}>
+                    {tag.toUpperCase()}
+                </Tag>
+                );
+            }
+        },
+        {title:"Last Login",dataIndex:"last_login", sorter: true},
+        {title:"Group", dataIndex:"group__name", sorter: true},
     ]
 
     const onSelectChange =(newSelectedRowKeys)=>{
         setSelectedRowKeys(newSelectedRowKeys)
-    }
-    const viewWallet =()=>{
-        if(selectedRowKeys.length !== 1){
-            messageApi.open({type: 'error',content: "Please select one user."});
-            return
-        }
-        else{
-            navigate(`user_wallet/${selectedRowKeys}`)
-            // navigate(`/user_wallet/${selectedRowKeys}`, {state:{selectedRowKeys:selectedRowKeys}})
-            // this value can get using useLocation()
-        }
     }
 
     const onTableChange = (pagination, filters, sorter) =>{
@@ -66,10 +64,9 @@ export default function User(){
     return(
     <>
        <div className='title_tab'>
-            <div className='title_tab_title'>Bond Users</div>
+            <div className='title_tab_title'>Users</div>
             <div className="title_tab_div">
-                <Search placeholder="Search by mobile, name" allowClear={true} onChange={(e)=> {if(e.target.value===""){setFilterDict({...filterDict, search:""})}}} onSearch={(value) => setFilterDict({...filterDict, search:value})} style={{ width: 200 }} />
-                <Button type="primary" onClick={viewWallet}>View Wallet</Button>
+                <Search placeholder="Search by name, email" allowClear={true} onChange={(e)=> {if(e.target.value===""){setFilterDict({...filterDict, search:""})}}} onSearch={(value) => setFilterDict({...filterDict, search:value})} style={{ width: 200 }} />
             </div>
         </div>
         <div className='main_tab'>

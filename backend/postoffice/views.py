@@ -31,8 +31,8 @@ class SendMail(APIView):
         try:
             with transaction.atomic():
                 sender = settings.EMAIL_HOST_USER
-                action_by = action_by if action_by.id else None
-                serializer = EmailLogSerializer(data={'mail_from': sender, 'mail_to': receiver, 'subject': subject, 'message': message, 'mail_cc': cc, 'mail_bcc': bcc, 'status':'pending', 'action_by_id':action_by.id, 'is_now':is_now})
+                action_by_id = action_by.id if action_by else None
+                serializer = EmailLogSerializer(data={'mail_from': sender, 'mail_to': receiver, 'subject': subject, 'message': message, 'mail_cc': cc, 'mail_bcc': bcc, 'status':'pending', 'action_by_id':action_by_id, 'is_now':is_now})
                 if serializer.is_valid():
                     instance = serializer.save()
                     if is_now:
@@ -86,7 +86,7 @@ def send_whatsapp_message(message):
     try:
         url=settings.GREEN_API
         payload={
-                    "chatId": "9537127284@c.us", 
+                    "chatId": "9537127284@c.us",
                     "message": message,
                 }
         headers = {'Content-Type': 'application/json'}

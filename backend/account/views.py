@@ -1,40 +1,39 @@
-from django.http import HttpResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-import json
 import logging
 from rest_framework.views import APIView, View
 from account.serializers import BondUserSerializers, BondUserListSerializers
-from datetime import datetime, timedelta
 from account.models import BondUser
 from django.contrib.auth import authenticate
 from django.core.cache import cache
-from django.db import transaction
 from account.backends import AdminLoginBackend
 from manager import manager
-from manager.manager import HttpsAppResponse, Util
-from django.db.models import CharField, Value, F
+from manager.manager import HttpsAppResponse
 from django.shortcuts import render
-from django.db.models.functions import Concat
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import update_last_login
-from account.models import MainMenu,UserToken, City, State, Distributor, AuthOTP
+from account.models import MainMenu,UserToken
 from rest_framework import viewsets
-from django.utils import timezone
-from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.decorators import action
-from django.contrib.auth.models import Group
 from manager.models import GroupPermission
 from django.urls import reverse
-from postoffice.views import send_otp_to_mobile
-from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from manager.manager import create_from_exception
 from django.shortcuts  import redirect
 from django.contrib.auth import login, authenticate, logout
+from postoffice.views import SendMail
+import textwrap
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import action
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import get_user_model
 
 
 # Create your views here.
@@ -43,14 +42,18 @@ class UserProfile(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         try:
             user_id = request.user.id
-            user_data = BondUserListSerializers(BondUser.objects.filter(id=user_id), many=True).data
+            user_data = BondUserListSerializers(BondUser.objects.filter(id=user_id), many=True,  context={'request': request}).data
             return HttpsAppResponse.send([user_data], 1, "User Profile data get successfully.")
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
 
     def put(self, request, pk=None):
         try:
-            serializer = BondUserListSerializers(BondUser.objects.get(pk=pk), data=request.data)
+            data = request.data
+            if request.FILES.get('file'):
+                data["profile"] = request.FILES.get('file')
+
+            serializer = BondUserListSerializers(BondUser.objects.get(pk=pk), data=data)
             if serializer.is_valid():
                 serializer.save()
                 return HttpsAppResponse.send([], 1, "User Profile Updated.")
@@ -66,8 +69,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         try:
             token = super().get_token(user)
-            token['mobile'] = user.mobile
-            token['full_name'] = user.full_name
+            token['email'] = user.email
+            token['full_name'] = f"{user.first_name} {user.last_name}"
             access_token =  str(token.access_token)
             refresh_token = str(token)
             UserToken.objects.update_or_create(user_id=user.id,defaults={'access_token': access_token})
@@ -75,6 +78,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             response=[{"access":str(access_token),"refresh":refresh_token}]
             return response
         except Exception as e:
+            logging.exception("Something went wrong.")
             manager.create_from_exception(e)
 
 class AppLogin(APIView):
@@ -83,17 +87,17 @@ class AppLogin(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = "app/login.html"
     success_url = "app:ask-anything-page"
-    redirect_field_name = 'next' 
+    redirect_field_name = 'next'
 
     def get(self, request, *args, **kwargs):
         return Response(status=200, template_name=self.template_name)
-    
+
     def post(self, request, *args, **kwargs):
         try:
             data = request.data
             user = authenticate(request, username=data["mobile"], password=data["password"])
             if user is not None:
-                login(request, user , backend='django.contrib.auth.backends.ModelBackend')                
+                login(request, user , backend='django.contrib.auth.backends.ModelBackend')
             redirect_to = request.GET.get(self.redirect_field_name, None)
             if redirect_to:
                 return redirect(redirect_to)
@@ -104,17 +108,17 @@ class AppLogin(APIView):
             create_from_exception(e)
             return render(request, self.template_name, context={"msg":str(e)})
 
-          
+
 class AppLogout(APIView):
     authentication_classes = []
     permission_classes = []
     success_url = "app:welcome-page"
-    
+
     def get(self, request, *args, **kwargs):
         logout(request)
         return redirect(reverse(self.success_url))
-    
-    
+
+
 class AppRegistration(APIView):
     authentication_classes = []
     permission_classes = []
@@ -162,17 +166,17 @@ class AdminLogin(APIView):
     permission_classes = []
     def post(self,request):
         try:
-            mobile = request.data["mobile"]
+            email = request.data["email"]
             password = request.data["password"]
-            if mobile and password:
-                user = AdminLoginBackend.authenticate(request, mobile=mobile, password=password)
+            if email and password:
+                user = AdminLoginBackend.authenticate(request, email=email, password=password)
                 if user:
                     tokens = MyTokenObtainPairSerializer.get_token(user)
                     return HttpsAppResponse.send(tokens, 1, "Login successfully")
                 else:
                     return HttpsAppResponse.send([], 0, "User is not found with this credential.")
             else:
-                return HttpsAppResponse.send([], 0, "Mobile and password is require.")
+                return HttpsAppResponse.send([], 0, "Email and password is require.")
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
 
@@ -207,141 +211,60 @@ class RegisterUser(APIView):
             return HttpsAppResponse.exception(str(e))
 
 
-class RegisterBondUser(APIView):
-    authentication_classes =[]
+class ForgetPassword(ViewSet):
+    authentication_classes = []
     permission_classes = []
-    def post(self, request):
-        try:
-            register_user_data = request.data
-            mobile_no = register_user_data["mobile"]
-            if not mobile_no:
-                return HttpsAppResponse.send([], 0, "Mobile number is required.")
-            if BondUser.objects.filter(mobile=mobile_no).exists():
-                return HttpsAppResponse.send([], 0, "Mobile number is already registered.")
-            if not City.objects.filter(id=register_user_data["city"],state=register_user_data["state"]).exists():
-                return HttpsAppResponse.send([], 0, "City is not available in selected state.")
-            serializer = BondUserSerializers(data=register_user_data)
-            if not serializer.is_valid():
-                error_messages = ", ".join(value[0] for key, value in serializer.errors.items())
-                return HttpsAppResponse.send([], 0, error_messages)
-            otp = send_otp_to_mobile(mobile_no)
-            if len(str(otp)) > 6:
-                return HttpsAppResponse.send([], 0, otp)
-            register_user_data["mobile"] = mobile_no
-            AuthOTP.objects.update_or_create(key=f"register_{mobile_no}",defaults={"otp":otp,"created_on":timezone.now(),"value":json.dumps(register_user_data),"is_used":False})
-            return HttpsAppResponse.send([], 1, "Otp has been send to mobile number successfully")
-        except Exception as e:
-           return HttpsAppResponse.exception(str(e))
 
-
-class VerifyRegisterUser(APIView):
-    authentication_classes =[]
-    permission_classes = []
-    def post(self,request):
+    def send_mail(self, request, *args, **kwargs):
         try:
-            verify_data = request.data
-            user_data = AuthOTP.objects.filter(key=f"register_{verify_data['mobile']}",is_used=False).first()
-            if user_data:
-                if str(user_data.otp) != str(verify_data["otp"]):
-                    return HttpsAppResponse.send([], 0, "OTP verification failed. Please make sure you have entered the correct OTP.")
-                if user_data.expire_on > timezone.now():
-                    data = json.loads(user_data.value)
-                    data["company"] = int(settings.DEFAULT_COMPANY_ID)
-                    serializer = BondUserSerializers(data=data)
-                    if serializer.is_valid():
-                        serializer.save()
-                        user_data.is_used = True
-                        user_data.save()
-                        user = authenticate(request, mobile=data["mobile"])
-                        tokens = MyTokenObtainPairSerializer.get_token(user)
-                        return HttpsAppResponse.send(tokens, 1, "Registration successfully")
-                    else:
-                        error_messages = ", ".join(value[0] for key, value in serializer.errors.items())
-                        return HttpsAppResponse.send([], 0, error_messages)
-                else:
-                    return HttpsAppResponse.send([], 0, "Your OTP has expired. Please request a new OTP.")
-            return HttpsAppResponse.send([], 0, "You need to register your self.")
+            email = request.data["email"]
+            try:
+                email_user =  BondUser.objects.get(email=email, is_active=True, is_deleted=False)
+            except ObjectDoesNotExist:
+               return HttpsAppResponse.send([], 0, "This email is not registered or account is not active.")
+
+            uid = urlsafe_base64_encode(force_bytes(email_user.id))
+            token = default_token_generator.make_token(email_user)
+
+            reset_link = f"{settings.FRONT_END_BASE_URL}/change_password/{uid}/{token}"
+
+            subject = "Reset Your Password - PanelPrime"
+            message =  textwrap.dedent(f'''
+                Hi {email_user.first_name} {email_user.last_name},
+
+                We received a request to reset your password for your PanelPrime account.
+                Please click the link below to reset your password:
+
+                { reset_link }
+
+                If you didn’t request this, you can safely ignore this email.
+
+                Thanks,
+                The PanelPrime Team
+            ''')
+
+            is_send, msg = SendMail.send_mail(None, True, email, subject, message)
+            if not is_send:
+                return HttpsAppResponse.send([], 0, msg)
+            return HttpsAppResponse.send([], 1, "Check your email for the password reset link.")
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
 
-
-class LoginBondUser(APIView):
-    authentication_classes =[]
-    permission_classes = []
-    def post(self,request):
+    def change_password(self, request, *args, **kwargs):
         try:
-            login_data = request.data
-            mobile_no = login_data["mobile"]
-            is_exit=  BondUser.objects.filter(mobile=mobile_no).exists()
-            if is_exit:
-                otp = send_otp_to_mobile(mobile_no)
-                if len(str(otp)) > 6:
-                    return HttpsAppResponse.send([], 0, otp)
-                login_data["mobile"] = mobile_no
-                AuthOTP.objects.update_or_create(key=f"login_{mobile_no}",defaults={"otp":otp,"created_on":timezone.now(),"value":json.dumps(login_data),"is_used":False})
-                return HttpsAppResponse.send([], 1, "Otp has been send to mobile number successfully")
+            data = request.data
+            uid = data.get("uid")
+            token = data.get("token")
+            password = data.get("password")
+
+            uid = urlsafe_base64_decode(uid).decode()
+            user = get_user_model().objects.get(pk=uid)
+            
+            if default_token_generator.check_token(user, token):
+                user.set_password(password)
+                user.save()
+                return HttpsAppResponse.send([], 1, "Password has been change successfully.")
             else:
-                return HttpsAppResponse.send([], 0, "User not found.")
-        except Exception as e:
-           return HttpsAppResponse.exception(str(e))
-
-
-class VerifyLoginBondUser(APIView):
-    authentication_classes =[]
-    permission_classes = []
-    def post(self,request):
-        try:
-            login_data = request.data
-            user_data = AuthOTP.objects.filter(key=f"login_{login_data['mobile']}", is_used=False).first()
-            if user_data:
-                if str(user_data.otp) != str(login_data["otp"]):
-                    return HttpsAppResponse.send([], 0, "OTP verification failed. Please make sure you have entered the correct OTP.")
-                if user_data.expire_on > timezone.now():
-                    user = authenticate(request, mobile=login_data["mobile"])
-                    tokens = MyTokenObtainPairSerializer.get_token(user)
-                    user_data.is_used = True
-                    user_data.save()
-                    return HttpsAppResponse.send(tokens, 1, "Login successfully.")
-                else:
-                    return HttpsAppResponse.send([], 0, "Your OTP has expired. Please request a new OTP.")
-            return HttpsAppResponse.send([], 0, "You need to log in using your mobile number.")
+                return HttpsAppResponse.send([], 0, "Invalid or expired token")
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
-
-
-class LogoutBondUser(APIView):
-    def post(self, request):
-        try:
-            refresh_token = request.data["refresh_token"]
-            UserToken.objects.filter(user_id=request.user.id).delete()
-            token = RefreshToken(token=refresh_token)
-            token.blacklist()
-            return HttpsAppResponse.send([], 1, "User logout successfully.")
-        except Exception as e:
-            return HttpsAppResponse.exception(str(e))
-
-
-class BondUserProfile(APIView):
-    def get(self, request):
-        try:
-            user_info = BondUser.objects.filter(id=request.user.id).values("full_name","mobile").annotate(full_address=Concat(F("address"), Value(', '), ("pin_code"), Value(', '), F("city__name"), Value(', '), F("state__name"),output_field=CharField())).first()
-            return HttpsAppResponse.send([user_info], 1, "User profile details.")
-        except Exception as e:
-            return HttpsAppResponse.exception(str(e))
-
-
-
-class GetCityStateDistributer(APIView):
-    authentication_classes =[]
-    permission_classes = []
-    def get(self,request):
-        try:
-            city = list(City.objects.filter(is_deleted=False).values("id","name").order_by("name"))
-            state = list(State.objects.filter(is_deleted=False).values("id","name").order_by("name"))
-            distributor = list(Distributor.objects.filter(is_deleted=False).values("id","name").order_by("name"))
-            response = [{"City":city,"State":state,"Distributor":distributor}]
-            return HttpsAppResponse.send(response, 1, "City and state data fetch successfully.")
-        except Exception as e:
-            return HttpsAppResponse.exception(str(e))
-
-

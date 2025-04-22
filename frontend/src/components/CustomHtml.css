@@ -28,3 +28,7 @@ select:focus,textarea:focus,input:focus {
 a{
     text-decoration: none;
 }
+
+.profile_card .ant-card-body{
+    margin: -5px -18px -10px -18px;
+}

@@ -13,22 +13,15 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterUser.as_view(), name='register'),
     path('main_menu/', MainMenuView.as_view(), name="main_menu"),
+    path('forgot_password/send_mail/', ForgetPassword.as_view({"post":"send_mail"}), name="forgot_password_send_mail"),
+    path('forgot_password/change_password/', ForgetPassword.as_view({"post":"change_password"}), name="forgot_password_change_password"),
 
-    # bondclick api
-    path("registration/", RegisterBondUser.as_view(), name="register_bond_user"),
-    path("verify_register/", VerifyRegisterUser.as_view(), name="register_verify"),
-    path("login/", LoginBondUser.as_view(), name="login_bond_user"),
-    path("verify_login/", VerifyLoginBondUser.as_view(), name="verify_login"),
-    path("logout/", LogoutBondUser.as_view(), name="logout"),
-    path('bond_user_profile/', BondUserProfile.as_view(), name="bond_user_profile"),
 
     # app login
     path('app_registration/', AppRegistration.as_view(), name="app-registration"),
     path('app_login/', AppLogin.as_view(), name="app-login"),
     path('app_logout/', AppLogout.as_view(), name="app-logout"),
 
-    # cache data apis
-    path('city_state_distributer/', GetCityStateDistributer.as_view(), name="city_state_distributer"),
 
     #adminpanel api
     path('admin_login/', AdminLogin.as_view(), name='admin_login'),

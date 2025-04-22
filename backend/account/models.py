@@ -5,23 +5,24 @@ from django.dispatch import receiver
 from datetime import timedelta
 
 
+
 def upload_location(instance, filename):
     extension = filename.rsplit('.')[1]
-    return f"profile/{instance.mobile}.{extension}"
+    return f"profile/{instance.id}.{extension}"
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, mobile, password=None, **extra_fields):
-        if not mobile:
-            raise ValueError('The Mobile Number field must be set')
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The email field must be set')
 
-        user = self.model(mobile=mobile, **extra_fields)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, mobile, password=None, **extra_fields):
-        user = self.create_user(mobile, password, **extra_fields)
+    def create_superuser(self, email, password=None, **extra_fields):
+        user = self.create_user(email, password, **extra_fields)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
@@ -56,65 +57,30 @@ class City(models.Model):
     def __str__(self):
         return self.name
 
-class Company(models.Model):
-    name = models.CharField(max_length=50, null=True, blank=True)
-    identity_id = models.CharField(max_length=50, null=True, blank=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-@receiver(post_save, sender=Company)
-def Company_wallet_on_company_post_save(sender, instance, created, **kwargs):
-    if created:
-        from qradmin.models import CompanyWallet
-        CompanyWallet.objects.create(company=instance)
-
-
-
-class Distributor(models.Model):
-    name = models.CharField(max_length=50, null=True, blank=True)
-    identity_id = models.CharField(max_length=50, null=True, blank=True)
-    company = models.ForeignKey(Company, on_delete=models.PROTECT, null=True, blank=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-
 class BondUser(AbstractBaseUser, PermissionsMixin):
-    full_name = models.CharField(max_length=50)
-    mobile = models.CharField(max_length=15, unique=True)
-    email = models.EmailField(null=True, blank=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    mobile = models.CharField(max_length=15,null=True, blank=True, unique=True)
+    email = models.EmailField(unique=True)
     address = models.CharField(max_length=200, null=True, blank=True)
     pin_code = models.CharField(max_length=10, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     state = models.ForeignKey(State, on_delete=models.CASCADE, null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     profile = models.ImageField(upload_to=upload_location, null=True, blank=True)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
-    distributor = models.ForeignKey(Distributor, on_delete=models.CASCADE, null=True, blank=True)
     password = models.CharField(max_length=200, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    is_app_user = models.BooleanField(default=False)
     groups = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
 
-    USERNAME_FIELD = 'mobile'
+    USERNAME_FIELD = 'email'
     objects = CustomUserManager()
 
 
     def __str__(self):
-        return self.mobile
-
-
-@receiver(post_save, sender=BondUser)
-def Bond_user_wallet_on_user_post_save(sender, instance, created, **kwargs):
-    if created:
-        from qrapp.models import BondUserWallet
-        BondUserWallet.objects.create(user=instance)
+        return self.email
 
 
 class UserToken(models.Model):
