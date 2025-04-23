@@ -24,12 +24,10 @@ class AskMeAnything(APIView):
         except Exception as e:
             return Response(str(e))
 
-
     def promt_filter(self, query, qtype):
         if qtype == "mail":
             query = "Generate a professional email message part only not subjects and other. The 'message' should include proper formatting with line breaks (\\n). Here's the context:" + query
         return query
-
 
     def ask_gemini(self, query):
         try:
@@ -40,3 +38,5 @@ class AskMeAnything(APIView):
             return Response(response.text)
         except Exception as e:
             return Response(str(e))
+
+
