@@ -76,13 +76,15 @@ class DocQuestionAnswer(APIView):
         return response.text
 
     def build_prompt(self, query, passage):
-        passage = "".join(passage)
+        passage = " ".join(passage)
         escaped = passage.replace("'", "").replace('"', "").replace("\n", " ")
         prompt = f"""
             You're a helpful assistant who explains things clearly and simply, like you're talking to someone without a technical background.
             Use any useful information available to give a clear, friendly, and complete answer to the question.
             Focus on being informative without sounding overly technical or formal.
             Do not mention or refer to where the information came from—just answer naturally as if you're explaining it based on what you know.
+            Only use information in the PASSAGE to answer the QUESTION. Don't assume anything outside of it.
+            Respond in a friendly, non-technical tone.
             If something isn’t directly relevant, feel free to leave it out.
 
             QUESTION: {query}
