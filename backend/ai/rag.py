@@ -17,7 +17,7 @@ class RagDocuments(APIView):
         try:
             chunk_file_text = self.load_file(os.getcwd() + r'/ai/files/Vishal resume.pdf')
             db, name = self.get_or_create_chroma_db(documents=chunk_file_text, path=os.getcwd() + r"/ai", name="rag_experiment")
-            return Response("Done")
+            return Response("Document upload done.")
         except Exception as e:
             logging.exception("Something went wrong")
             return Response(str(e))
@@ -41,7 +41,6 @@ class RagDocuments(APIView):
             for page in reader.pages:
                 file_text += page.extract_text()
 
-            # big chunks of data can be hard. Thus, we split the text into multiple small pieces called chunks to make both retrieval and generation faster and easier.
             split_text = re.split('\n \n', file_text)
             chunk_file_text = [text for text in split_text if text != ""]
 
@@ -62,8 +61,8 @@ class DocQuestionAnswer(APIView):
             chroma_client = chromadb.PersistentClient(path=os.getcwd() + r"/ai")
             collection = chroma_client.get_collection(name="rag_experiment", embedding_function=embedding_function)
 
-            passage = collection.query(query_texts=[query], n_results=3)["documents"][0]
-            response = self.get_gemini_response(query, passage)
+            passage = collection.query(query_texts=[query], n_results=5)
+            response = self.get_gemini_response(query, passage["documents"][0])
             return Response(response)
         except Exception as e:
             logging.exception("Something went wrong.")
