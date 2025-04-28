@@ -3,7 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from google import genai
 from django.conf import settings
-import json
+from django.http import HttpResponse
+from bs4 import BeautifulSoup
+import json, logging
+from manager.manager import create_from_exception
+
 
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
@@ -18,25 +22,35 @@ class AskMeAnything(APIView):
             qtype = query_params.get("qtype")
             if query:
                 query = self.promt_filter(query, qtype)
-                return self.ask_gemini(query)
+                data = self.ask_gemini(query)
+                return HttpResponse(json.dumps({"data":[data], "status": 1, "message": "Generation Done."}))
             else:
-                return Response("query not found!")
+                return HttpResponse(json.dumps({"status": 0, "message": "Query not found!"}))
         except Exception as e:
-            return Response(str(e))
+            logging.exception("Something went wrong.")
+            create_from_exception(e)
+            return HttpResponse(json.dumps({"status": 0, "message": str(e)}))
 
     def promt_filter(self, query, qtype):
         if qtype == "mail":
-            query = "Generate a professional email message part only not subjects and other. The 'message' should include proper formatting with line breaks (\\n). Here's the context:" + query
+            query = f"""
+                Generate a professional email message and subject part only not other.
+                The 'message' should include proper formatting with line breaks (\\n).
+                Here's the context: {query}
+                Output format: {{subject:'', message:''}}
+                """
+
         return query
 
     def ask_gemini(self, query):
-        try:
-            response = client.models.generate_content(
-                        model="gemini-2.0-flash",
-                        contents=[query]
-                    )
-            return Response(response.text)
-        except Exception as e:
-            return Response(str(e))
+        response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=[query]
+                )
+
+        response = (response.text).replace('```json','').replace('```','')
+        json_response = json.loads(response)
+        return json_response
+       
 
 

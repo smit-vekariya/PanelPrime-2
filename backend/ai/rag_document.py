@@ -5,22 +5,25 @@ from django.conf import settings
 from chromadb import Documents, EmbeddingFunction, Embeddings
 import chromadb.utils.embedding_functions as embedding_functions
 from typing import List
-import chromadb, re, logging, os
+from django.http import HttpResponse
+from manager.manager import create_from_exception
+import chromadb, re, logging, os, json
 import google.generativeai as genai
 
 
 class RagDocuments(APIView):
     authentication_classes = []
-    permission_classes  = []
+    permission_classes = []
 
     def get(self, request, *args, **kwargs):
         try:
             chunk_file_text = self.load_file(os.getcwd() + r'/ai/files/Vishal resume.pdf')
             db, name = self.get_or_create_chroma_db(documents=chunk_file_text, path=os.getcwd() + r"/ai", name="rag_experiment")
-            return Response("Document upload done.")
+            return HttpResponse(json.dumps({"status": 1, "message": "Document upload done."}))
         except Exception as e:
-            logging.exception("Something went wrong")
-            return Response(str(e))
+            logging.exception("Something went wrong.")
+            create_from_exception(e)
+            return HttpResponse(json.dumps({"status": 0, "message": str(e)}))
 
     def get_or_create_chroma_db(self, documents:List, path:str, name:str):
 
@@ -36,20 +39,16 @@ class RagDocuments(APIView):
         return db, name
 
     def load_file(self, file_path):
-        try:
-            reader = PdfReader(file_path)
-            file_text = ""
-            for page in reader.pages:
-                file_text += page.extract_text()
+        reader = PdfReader(file_path)
+        file_text = ""
+        for page in reader.pages:
+            file_text += page.extract_text()
 
-            split_text = re.split('\n \n', file_text)
-            chunk_file_text = [text for text in split_text if text != ""]
+        split_text = re.split('\n \n', file_text)
+        chunk_file_text = [text for text in split_text if text != ""]
 
-            return chunk_file_text
-        except Exception as e:
-            print(str(e))
-            return []
-
+        return chunk_file_text
+      
 
 class DocQuestionAnswer(APIView):
     authentication_classes = []
@@ -67,10 +66,11 @@ class DocQuestionAnswer(APIView):
 
             passage = collection.query(query_texts=[query], n_results=5)
             response = self.get_gemini_response(query, passage["documents"][0])
-            return Response(response)
+            return HttpResponse(json.dumps({"data":[{"message":response}], "status": 1, "message": "Generation Done."}))
         except Exception as e:
             logging.exception("Something went wrong.")
-            return Response(str(e))
+            create_from_exception(e)
+            return HttpResponse(json.dumps({"status": 0, "message": str(e)}))
 
     def get_gemini_response(self, query, passage):
         genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -96,6 +96,3 @@ class DocQuestionAnswer(APIView):
             Your response:
         """
         return prompt
-
-    
-                           
