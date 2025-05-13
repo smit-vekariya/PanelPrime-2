@@ -34,6 +34,8 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
+from django.db.models import F
+
 
 
 # Create your views here.
@@ -182,6 +184,7 @@ class AdminLogin(APIView):
 
 
 class MainMenuView(APIView):
+
     def get(self, request):
         try:
             if request.user.is_superuser is False:
@@ -198,18 +201,38 @@ class MainMenuView(APIView):
 class RegisterUser(APIView):
     authentication_classes =[]
     permission_classes = []
+    def get(self, request):
+        try:
+            user_id = request.query_params.get("pk")
+            user_instance = BondUser.objects.get(id=user_id)
+            user_data = BondUserListSerializers(user_instance, context={'request': request}).data
+            return HttpsAppResponse.send([user_data], 1, "data get successfully.")
+        except Exception as e:
+            return HttpsAppResponse.exception(str(e))
+
     def post(self, request):
         try:
-            serializer = BondUserSerializers(data=request.data)
+            user_id = self.request.query_params.get("id","")
+            if user_id:
+                serializer = BondUserSerializers(instance=BondUser.objects.get(id=user_id), data=request.data["registerForm"], partial=True)
+            else:
+                serializer = BondUserSerializers(data=request.data["registerForm"])
             if serializer.is_valid():
                 serializer.save()
                 return HttpsAppResponse.send([], 1, "Registration successfully")
             else:
-                error_messages = ", ".join(value[0] for key, value in serializer.errors.items())
+                error_messages = ", ".join(f"({key}) {value[0]}" for key, value in serializer.errors.items())
                 return HttpsAppResponse.send([], 0, error_messages)
         except Exception as e:
             return HttpsAppResponse.exception(str(e))
 
+    def delete(self, request):
+        try:
+            user_id = self.request.query_params.get("id","")
+            BondUser.objects.get(id=user_id).soft_delete()
+            return HttpsAppResponse.send([], 1, "User deleted successfully")
+        except Exception as e:
+            return HttpsAppResponse.exception(str(e))
 
 class ForgetPassword(ViewSet):
     authentication_classes = []
@@ -259,7 +282,7 @@ class ForgetPassword(ViewSet):
 
             uid = urlsafe_base64_decode(uid).decode()
             user = get_user_model().objects.get(pk=uid)
-            
+
             if default_token_generator.check_token(user, token):
                 user.set_password(password)
                 user.save()

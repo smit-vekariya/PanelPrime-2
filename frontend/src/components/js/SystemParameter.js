@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState,useContext } from "react"
 import useAxios from "../../utils/useAxios"
 import { AuthContext } from "../../context/AuthContext";
 import { Button, Input, Table,Modal,Form } from "antd";
-const {TextArea }= Input 
+const {TextArea }= Input
 
 
 
@@ -18,13 +18,14 @@ export default function SystemParameter(){
     const filter_dict = {page:1,pageSize:10,orderBy:"-id",search:"",top:0}
     const initialValues = {"id":0,"code":"","value":"","description":""}
     const [form_data, setForm]  = useState(initialValues)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [filterDict, setFilterDict] =useState(filter_dict)
 
     const getSysParameter = useCallback(async()=>{
         await api.current.get(`/manager/sys_parameter/`)
             .then((res)=>{
                 setTotalRecord(res.data.data.length)
-                setSystemParameterData(res.data.data) 
+                setSystemParameterData(res.data.data)
             })
             .catch((error)=>{
                 messageApi.open({type: 'error', content:error.message})
@@ -42,12 +43,12 @@ export default function SystemParameter(){
         {title:"Description", dataIndex:"description", sorter: true}
     ]
 
-   
+
     const onTableChange = (pagination, filters, sorter) =>{
         var orderBy = sorter.order ? (sorter.order === "ascend"? "":"-") + sorter.field : "-id"
         setFilterDict({...filterDict,page:pagination.current,pageSize:pagination.pageSize,orderBy:orderBy})
     }
-    
+
     const addSysPara = () =>{
         setIsEdit(false)
         setForm(initialValues)
@@ -64,10 +65,16 @@ export default function SystemParameter(){
         }
     }
 
-    const deleteSysPara = useCallback(async()=>{
-        console.log("selectedRowKeys", selectedRowKeys);
+    const deleteSysPara = () => {
         if(selectedRowKeys.length === 1){
-            await api.current.delete(`/manager/sys_parameter/${selectedRowKeys[0]}/`)
+            setIsDeleteModalOpen(true)
+        }else{
+            messageApi.open({type: 'error', content:"Please select one data."})
+        }
+    }
+
+    const deleteOk = useCallback(async()=>{
+        await api.current.delete(`/manager/sys_parameter/${selectedRowKeys[0]}/`)
             .then((res)=>{
                 if(res.data.status === 0){
                     messageApi.open({type: 'error', content:res.data.message})
@@ -78,14 +85,10 @@ export default function SystemParameter(){
             })
             .catch((error)=>{
                 messageApi.open({type: 'error', content:error.message})
-    
-            })
-            setIsModalOpen(false)
-        }else{
-            messageApi.open({type: 'error', content:"Please select one data."})
 
-        }
-    },[messageApi,selectedRowKeys,getSysParameter])
+            })
+            setIsDeleteModalOpen(false)
+    },[messageApi, selectedRowKeys, getSysParameter])
 
     const handleOk = useCallback(async() =>{
         await api.current.post(`/manager/sys_parameter/`,{form_data})
@@ -124,7 +127,7 @@ export default function SystemParameter(){
             })
             setIsModalOpen(false)
     },[form_data,selectedRowKeys,getSysParameter,messageApi])
-    
+
 
     return (<>
             <div className='title_tab'>
@@ -167,5 +170,14 @@ export default function SystemParameter(){
                     </Form.Item>
                 </Form>
             </Modal>
+            <Modal
+                title="Delete Confirmation"
+                closable={{ 'aria-label': 'Custom Close Button' }}
+                open={isDeleteModalOpen}
+                onOk={deleteOk}
+                onCancel={()=> setIsDeleteModalOpen(false)}
+            >
+                Are you sure you want to delete this parameter ?
+            </Modal>
     </>)
-} 
+}

@@ -15,7 +15,7 @@ class CustomPagination(PageNumberPagination):
     max_page_size = 1000
 
 class UserList(generics.ListAPIView):
-    queryset = BondUser.objects.all()
+    queryset = BondUser.objects.filter(is_deleted=False)
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     serializer_class = BondUserListSerializers
     search_fields =["first_name", "email"]

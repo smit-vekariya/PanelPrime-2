@@ -26,12 +26,14 @@ class BondUserSerializers(serializers.ModelSerializer):
 
 
 class BondUserListSerializers(serializers.ModelSerializer):
-    group__name = serializers.CharField(source='group.name', read_only=True)
+    group__name = serializers.CharField(source='groups.name', read_only=True)
     profile_path = serializers.SerializerMethodField()
     class Meta:
         model = BondUser
-        fields = ["id", "email", "mobile", "first_name", "last_name", "last_login", "profile", "profile_path", "is_active", "group__name", "address", "pin_code"]
+        fields = ["id", "email", "mobile", "first_name", "last_name", "last_login", "profile", "profile_path", "is_active", "groups", "group__name", "address", "pin_code", "is_active"]
 
     def get_profile_path(self, obj):
         request = self.context.get('request')
-        return request.build_absolute_uri(obj.profile.url)
+        if obj.profile:
+            return request.build_absolute_uri(obj.profile.url)
+        return None

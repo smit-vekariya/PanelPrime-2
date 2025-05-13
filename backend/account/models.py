@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import timedelta
+from django.utils import timezone
 
 
 
@@ -60,7 +61,7 @@ class City(models.Model):
 class BondUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    mobile = models.CharField(max_length=15,null=True, blank=True, unique=True)
+    mobile = models.CharField(max_length=50,null=True, blank=True, unique=True)
     email = models.EmailField(unique=True)
     address = models.CharField(max_length=200, null=True, blank=True)
     pin_code = models.CharField(max_length=10, null=True, blank=True)
@@ -82,6 +83,13 @@ class BondUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def soft_delete(self):
+        timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
+        self.email = f"{timestamp}_deleted_{self.email}"
+        self.mobile = f"{timestamp}_deleted_{self.mobile}"
+        self.is_active = False
+        self.is_deleted = True
+        self.save()
 
 class UserToken(models.Model):
     user = models.ForeignKey(BondUser, on_delete=models.CASCADE)

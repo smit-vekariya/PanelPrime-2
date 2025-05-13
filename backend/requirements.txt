@@ -171,7 +171,7 @@ uritemplate==4.1.1
 uritools==4.0.2
 urllib3==2.1.0
 uvicorn==0.34.2
-uvloop==0.21.0
+# uvloop==0.21.0
 vine==5.1.0
 watchfiles==1.0.5
 wcwidth==0.2.13

@@ -41,7 +41,6 @@ export default function Profile(){
         for (const key in profile) {
             if (key !== 'profile') {
                 formData.append(key, profile[key]);
-
             }
         }
 
@@ -93,6 +92,13 @@ export default function Profile(){
                 <Form  style={{ maxWidth: 600,margin: '19px 6px'}}  layout="vertical" labelAlign="left">
                     <Row gutter={24}>
                         <Col span={12}>
+                            <Form.Item label="Email (username)">
+                                <Input type='email' className='edit' name ="email" onChange={editProfile} value={profile.email} disabled={disabled}></Input>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={24}>
+                        <Col span={12}>
                             <Form.Item label="First Name">
                                 <Input type='text' className='edit' name="first_name" onChange={editProfile} value={profile.first_name} disabled={disabled}></Input>
                             </Form.Item>
@@ -107,29 +113,9 @@ export default function Profile(){
                                 <Input type='text' className='edit' name ="mobile" onChange={editProfile} value={profile.mobile} disabled={disabled}></Input>
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
-                            <Form.Item label="Email">
-                                <Input type='email' className='edit' name ="email" onChange={editProfile} value={profile.email} disabled={disabled}></Input>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Address">
-                                <Input type='text' className='edit' name="address" onChange={editProfile} value={profile.address} disabled={disabled}></Input>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Pin Code">
-                                <Input type='text' className='edit' name="pin_code" onChange={editProfile} value={profile.pin_code} disabled={disabled}></Input>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="City">
-                                <Input type='text' value={profile.city} disabled></Input>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="State">
-                                <Input type='text' value={profile.state} disabled></Input>
+                         <Col span={12}>
+                            <Form.Item label="Group">
+                                <Input type='text' name ="mobile" value={profile.group__name} disabled></Input>
                             </Form.Item>
                         </Col>
                     </Row>
