@@ -174,3 +174,69 @@ body:has(.main_div) {
     font-size: 39px;
 
 }
+
+/* ai button css */
+.ai_button {
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #7F00FF, #00C9FF, #00FF87);
+    /* 3-color base */
+    background-size: 300% 300%;
+    animation: baseGradientShift 6s ease infinite;
+    color: white;
+    z-index: 1;
+    border: none;
+    transition: background 0.4s ease;
+}
+
+.ai_button>span {
+    position: relative;
+    z-index: 2;
+}
+
+.ai_button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    /* 2-color hover */
+    background-size: 200% 200%;
+    animation: hoverGradientShift 4s ease infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ai_button:hover::before {
+    opacity: 1;
+}
+
+@keyframes baseGradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes hoverGradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}

@@ -19,9 +19,9 @@ class AskMeAnything(APIView):
         try:
             query_params = self.request.query_params
             query = query_params.get("query")
-            qtype = query_params.get("qtype")
+            query_type = query_params.get("query_type")
             if query:
-                query = self.promt_filter(query, qtype)
+                query = self.prompt_filter(query, query_type)
                 data = self.ask_gemini(query)
                 return HttpResponse(json.dumps({"data":[data], "status": 1, "message": "Generation Done."}))
             else:
@@ -31,8 +31,8 @@ class AskMeAnything(APIView):
             create_from_exception(e)
             return HttpResponse(json.dumps({"status": 0, "message": str(e)}))
 
-    def promt_filter(self, query, qtype):
-        if qtype == "mail":
+    def prompt_filter(self, query, query_type):
+        if query_type == "mail":
             query = f"""
                 Generate a professional email message and subject part only not other.
                 The 'message' should include proper formatting with line breaks (\\n).
@@ -51,6 +51,6 @@ class AskMeAnything(APIView):
         response = (response.text).replace('```json','').replace('```','')
         json_response = json.loads(response)
         return json_response
-       
+
 
 

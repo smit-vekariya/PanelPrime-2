@@ -175,7 +175,7 @@ export default function SystemParameter(){
                 closable={{ 'aria-label': 'Custom Close Button' }}
                 open={isDeleteModalOpen}
                 onOk={deleteOk}
-                onCancel={()=> setIsDeleteModalOpen(false)}
+                onCancel={()=> setIsDeleteModalOpen(false)} 
             >
                 Are you sure you want to delete this parameter ?
             </Modal>
