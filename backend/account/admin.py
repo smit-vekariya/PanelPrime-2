@@ -1,14 +1,11 @@
 from django.contrib import admin
 from account.models import MainMenu, BondUser, State, City, UserToken, AuthOTP
 
-
 # Register your models here.
-
 
 @admin.register(MainMenu)
 class MainMenuAdmin(admin.ModelAdmin):
     list_display = ("name","code", "url", "sequence", "parent", "is_parent", "icon")
-
 
 
 @admin.register(BondUser)

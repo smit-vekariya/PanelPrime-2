@@ -87,8 +87,7 @@ export default function User(){
 
     useEffect(()=>{
         getUserData();
-        getGroup();
-    }, [getUserData, getGroup])
+    }, [getUserData])
 
 
     const columns = [
@@ -124,6 +123,7 @@ export default function User(){
     }
 
     const addUser = () =>{
+        getGroup()
         setIsEdit(false)
         setRegisterForm(register_payload)
         setIsModalOpen(true)
@@ -156,6 +156,7 @@ export default function User(){
 
     const editUser = useCallback(async() => {
         if(selectedRowKeys.length === 1){
+            getGroup()
             setIsEdit(true)
             await api.current.get(`/account/register/?pk=${selectedRowKeys[0]}`)
                 .then((res)=>{

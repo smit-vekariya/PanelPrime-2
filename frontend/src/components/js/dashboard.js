@@ -121,8 +121,6 @@ const HeaderBar = memo(({logoutUser, user, setLoading})=>{
 
   return (
       <Header className='custom_header'>
-          <a href='https://www.fast2sms.com/dashboard/transactional-history' target='blank' style={{marginLeft: '10px'}}><Button type="dashed">Go to Fast2sms</Button></a>
-          <a href='https://dashboard.razorpay.com/app/dashboard' target='blank' style={{marginLeft: '10px'}}><Button type="dashed">Go to Razorpay</Button></a>
           <DashboardContext.Provider value={{setLoading:setLoading}}>
             <Email/>
           </DashboardContext.Provider>
